@@ -25,7 +25,7 @@ const question = () => {
       rl.close();
       isSIGINT = false;
     } else {
-      writeStream.write(`\n${text}`);
+      writeStream.write(`${text}\n`);
       return question();
     }
   });
