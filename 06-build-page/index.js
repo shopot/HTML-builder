@@ -136,12 +136,10 @@ const createHTMLBundle = async (srcDir, srcTemplateFile, destBundleFile) => {
 
   let content = await nodeFS.promises.readFile(srcTemplateFile, { encoding: 'utf8' });
 
-  for (let index = 0; index < files.length; index++) {
-    const componentFile = nodePath.resolve(srcDir, files[index]);
+  for (const file of files) {
+    const html = await nodeFS.promises.readFile(nodePath.resolve(srcDir, file), { encoding: 'utf8' });
 
-    const pattern = nodePath.basename(files[index]).replace(/\.html$/g, '');
-
-    const html = await nodeFS.promises.readFile(componentFile, { encoding: 'utf8' });
+    const pattern = nodePath.basename(file).replace(/\.html$/g, '');
 
     content = content.replace(`{{${pattern}}}`, html);
   }
