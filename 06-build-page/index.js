@@ -41,10 +41,24 @@ const clean = async dest => {
   return true;
 };
 
-const getFiles = async (srcDir, ext) => {
-  // Get css files from srcDir
-  let files = await nodeFS.promises.readdir(srcDir);
-  return files.filter(file => new RegExp(`\.${ext.replace(/^\./, '')}\$`, 'g').test(file));
+/**
+ * Get file name from src directory
+ *
+ * @param {String} srcDir
+ * @param {String} ext
+ * @returns {String[]}
+ */
+const getFiles = async (srcDir, ext = 'css') => {
+  // Get files from srcDir
+  let files = await nodeFS.promises.readdir(srcDir, { withFileTypes: true });
+
+  return files
+    .filter(file => {
+      if (new RegExp(`\.${ext.replace(/^\./, '')}\$`, 'g').test(file.name) && file.isFile()) {
+        return true;
+      }
+    })
+    .map(file => file.name);
 };
 
 /**
