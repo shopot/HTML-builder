@@ -1,55 +1,68 @@
-const fs = require('fs');
-const path = require('path');
+const nodeFS = require('fs');
+const nodePath = require('path');
 
 /**
  * Config
  */
 const config = {
-  srcStylesDir: path.resolve(__dirname, 'styles'),
-  destStylesFile: path.resolve(__dirname, 'project-dist', 'bundle.css'),
+  srcStylesDir: nodePath.resolve(__dirname, 'styles'),
+  destStylesFile: nodePath.resolve(__dirname, 'project-dist', 'bundle.css'),
 };
 
 /**
- * Get css files from source directory
+ * Get file name from src directory
  *
  * @param {String} srcDir
- * @param {Function} cb
+ * @param {String} ext
+ * @returns {String[]}
  */
-const getCSSFiles = (srcDir, cb) => {
-  fs.readdir(srcDir, {}, (err, files) => {
-    const cssFiles = files.filter(file => {
-      return new RegExp(/\.css$/, 'g').test(file);
-    });
+const getFiles = async (srcDir, ext = 'css') => {
+  // Get files from srcDir
+  let files = await nodeFS.promises.readdir(srcDir, { withFileTypes: true });
 
-    cb(cssFiles);
-  });
-};
-
-/**
- * Create read stream
- *
- * @param {String} filename
- * @return {fs.ReadStream} readStream
- */
-const createReaderStream = filename => {
-  return fs.createReadStream(filename, { flags: 'r' });
+  return files
+    .filter(file => {
+      if (new RegExp(`\.${ext.replace(/^\./, '')}\$`, 'g').test(file.name) && file.isFile()) {
+        return true;
+      }
+    })
+    .map(file => file.name);
 };
 
 /**
  * Create CSS bundle
  *
- * @param {String[]} files
+ * @param {String} srcDir source directory with CSS files
+ * @param {String} destBundleFile target bundle file
  */
-const createBuildCSSFile = files => {
-  const writeStream = fs.createWriteStream(config.destStylesFile, { flags: 'w' });
+const createCSSBundle = async (srcDir, destBundleFile) => {
+  // Set destBundleFile
+  destBundleFile = destBundleFile || nodePath.resolve(config.dist, 'style.css');
 
-  files.forEach(file => {
-    const filename = path.resolve(config.srcStylesDir, file);
+  // Get css files from srcDir
+  const files = await getFiles(srcDir, 'css');
 
-    createReaderStream(filename).pipe(writeStream);
-  });
+  const styles = [];
+
+  // Fill array with styles
+  for (const file of files) {
+    console.log('Processing file: ' + file);
+
+    const filename = nodePath.resolve(srcDir, file);
+
+    const data = await nodeFS.promises.readFile(filename, { encoding: 'utf8' });
+
+    styles.push(data);
+  }
+
+  // Add styles to CSS bundle file
+  await nodeFS.promises.writeFile(destBundleFile, styles.join('\n'), { encoding: 'utf8', flag: 'w' });
 
   console.log('Create CSS bundle was completed successfully.');
 };
 
-getCSSFiles(config.srcStylesDir, createBuildCSSFile);
+const main = async () => {
+  createCSSBundle(config.srcStylesDir, config.destStylesFile);
+};
+
+main();
