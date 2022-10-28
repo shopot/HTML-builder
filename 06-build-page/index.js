@@ -104,12 +104,21 @@ const createCSSBundle = async (srcDir, destBundleFile) => {
   // Get css files from srcDir
   const files = await getFiles(srcDir, 'css');
 
-  const writeStream = nodeFS.createWriteStream(destBundleFile, { flags: 'w' });
+  const styles = [];
 
-  files.forEach(file => {
+  // Fill array with styles
+  for (const file of files) {
+    console.log('Processing file: ' + file);
+
     const filename = nodePath.resolve(srcDir, file);
-    nodeFS.createReadStream(filename, { flags: 'r' }).pipe(writeStream);
-  });
+
+    const data = await nodeFS.promises.readFile(filename, { encoding: 'utf8' });
+
+    styles.push(data);
+  }
+
+  // Add styles to CSS bundle file
+  await nodeFS.promises.writeFile(destBundleFile, styles.join('\n'), { encoding: 'utf8', flag: 'w' });
 
   console.log('Create CSS bundle was completed successfully.');
 };
