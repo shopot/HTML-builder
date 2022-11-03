@@ -2,6 +2,18 @@ const nodeFS = require('fs');
 const nodePath = require('path');
 
 /**
+ * Recursive remove file or directory
+ *
+ * @param {String} dest
+ * @returns {boolean}
+ */
+const clean = async (dest) => {
+  await nodeFS.promises.rm(dest, { recursive: true, force: true });
+  console.log('Clean target directory was completed successfully.');
+  return true;
+};
+
+/**
  * Copy files from source to destination
  *
  * @param {string} srcDir
@@ -36,6 +48,7 @@ const main = async () => {
   const srcDir = nodePath.resolve(__dirname, 'files');
   const destDir = nodePath.join(__dirname, 'files-copy');
 
+  await clean(destDir);
   await copyDir(srcDir, destDir);
 
   console.log('Job was completed successfully.');
